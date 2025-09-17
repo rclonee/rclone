@@ -10,6 +10,10 @@ import (
 	_ "github.com/rclone/rclone/lib/plugin" // import plugins
 )
 
+var (
+	gi
+)
+
 func main() {
 	cmd.Main()
 }
