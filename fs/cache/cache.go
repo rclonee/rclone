@@ -3,6 +3,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 	"strings"
 	"sync"
@@ -181,6 +182,7 @@ func Get(ctx context.Context, fsString string) (f fs.Fs, err error) {
 	newCtx = fs.CopyConfig(newCtx, ctx)
 	newCtx = filter.CopyConfig(newCtx, ctx)
 	f, err = GetFn(newCtx, fsString, fs.NewFs)
+	fmt.Println("3) FsString: ", fsString)
 	if f == nil || (err != nil && err != fs.ErrorIsFile) {
 		return f, err
 	}

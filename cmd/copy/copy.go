@@ -3,6 +3,7 @@ package copy
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/rclone/rclone/cmd"
@@ -113,6 +114,9 @@ copying anything.
 	Run: func(command *cobra.Command, args []string) {
 		cmd.CheckArgs(2, 2, command, args)
 		fsrc, srcFileName, fdst := cmd.NewFsSrcFileDst(args)
+
+		fmt.Println("Run CMD!")
+
 		cmd.Run(true, true, command, func() error {
 			ctx := context.Background()
 			close, err := operationsflags.ConfigureLoggers(ctx, fdst, command, &loggerOpt, loggerFlagsOpt)

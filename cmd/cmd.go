@@ -148,6 +148,7 @@ func newFsDir(remote string) fs.Fs {
 		fs.Fatalf(nil, "Failed to create file system for %q: %v", remote, err)
 	}
 	cache.Pin(f) // pin indefinitely since it was on the CLI
+	fmt.Println("2) F: ", f, " Remote: ", remote)
 	return f
 }
 
@@ -172,6 +173,9 @@ func NewFsSrcDst(args []string) (fs.Fs, fs.Fs) {
 func NewFsSrcFileDst(args []string) (fsrc fs.Fs, srcFileName string, fdst fs.Fs) {
 	fsrc, srcFileName = NewFsFile(args[0])
 	fdst = newFsDir(args[1])
+
+	fmt.Println("1) File dst: ", fdst)
+
 	return fsrc, srcFileName, fdst
 }
 
@@ -224,6 +228,7 @@ func NewFsDstFile(args []string) (fdst fs.Fs, dstFileName string) {
 		fs.Fatalf(nil, "%q is a directory", args[0])
 	}
 	fdst = newFsDir(dstRemote)
+
 	return
 }
 
@@ -240,6 +245,9 @@ func ShowStats() bool {
 func Run(Retry bool, showStats bool, cmd *cobra.Command, f func() error) {
 	ctx := context.Background()
 	ci := fs.GetConfig(ctx)
+
+	fmt.Println("Inside run cmd!")
+
 	var cmdErr error
 	stopStats := func() {}
 	if !showStats && ShowStats() {
@@ -535,8 +543,9 @@ func AddBackendFlags() {
 }
 
 // Main runs rclone interpreting flags and commands out of os.Args
-func Main() {
+func Main(cfg string, host string) {
 	setupRootCommand(Root)
+
 	AddBackendFlags()
 	if err := Root.Execute(); err != nil {
 		if strings.HasPrefix(err.Error(), "unknown command") && selfupdateEnabled {

